@@ -4,7 +4,7 @@ Simple Cheat menu for Dishonored 1. Use at your own risk as this application mig
 Uses ImGui and cazz's memory.h file. Big thanks to cazz (https://github.com/cazzwastaken) for memory.h and incredible ImGui tutorials. 
 
 # Usage
-This is an external cheat, meaning you do not need to tamper with any game files. All you need to do to get the cheat to work is click the "hook" button in the cheat, while the game is running. Then the cheat will attempt to find and hook onto the game. The cheat looks for "Dishonored.exe" specifically, so you might need to rename the game exe file. Once the game has been hooked, the cheat will start working.
+This is an external cheat, meaning you do not need to tamper with any game files. All you need to do is click the "hook game" button in the cheat, while the game is running, then the cheat will attempt to find and hook onto the game. The cheat looks for "Dishonored.exe" specifically, so you might need to rename the game exe file. Once the game has been hooked, the cheat will start working.
 
 # Features
 Unlimited Health, Mana, Elixirs.
@@ -39,5 +39,5 @@ The application taskbar name is a bunch of Chinese characters (when running, hov
 When displaying the memory addresses of client, player, and inventory, values are in decimal instead of hex.
 
 # Screenshots
-![Dishonored1](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/ea3b5db9-3d11-4e93-954f-5af661182dc2)
-![Dishonored2](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/8b680859-07e4-416c-83ad-b593cd76085e)
+![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/3e740032-5b71-4e1f-930a-8729178a71cd)
+![Dishonored1](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/2b297736-8482-4d6b-8376-ce0b2b48da50)
