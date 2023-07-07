@@ -32,7 +32,7 @@ Now you are able to build the project- click on Build at the top-left of visual 
 The exe file should appear in a "build" file that wasn't in the folder before.
 
 # Current Bugs/Unintended Features
-Unlimited Health does not mean invincibility, since the program only executes cheats every 10 miliseconds.
+Unlimited Clip currently does not work and will crash your game when loading into another save.
 
 The application taskbar name is a bunch of Chinese characters (when running, hover over the application on the taskbar).
 
