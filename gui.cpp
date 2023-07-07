@@ -207,6 +207,9 @@ void gui::Render() noexcept {
 		ImGui::Text("Player:");
 		ImGui::SameLine();
 		ImGui::Text((std::to_string(cheatInstance->getPlayerAddress())).c_str());
+		ImGui::Text("Abilities:");
+		ImGui::SameLine();
+		ImGui::Text((std::to_string(cheatInstance->getAbilitiesAddress())).c_str());
 		ImGui::Text("Inventory:");
 		ImGui::SameLine();
 		ImGui::Text((std::to_string(cheatInstance->getInventoryAddress())).c_str());
@@ -215,36 +218,48 @@ void gui::Render() noexcept {
 	// Players GUI section
 	ImGui::SeparatorText("Player");
 	static bool infHealth = false;
+	static bool MaxHealthOpBroken = false;
 	ImGui::Checkbox("Unlimited Health", &infHealth);
-	if (gameHooked && infHealth)
-		if (!cheatInstance->InfiniteHealth())
-			if(!cheatInstance->IsHooked())
-				gameHooked = false;
+	if (gameHooked && infHealth) {
+		if (!cheatInstance->InfiniteHealth() && !cheatInstance->IsHooked()) {
+			gameHooked = false;
+		} else {
+			MaxHealthOpBroken = true;
+		}
+	}
+	if (gameHooked && !infHealth && MaxHealthOpBroken) {
+		cheatInstance->RestoreMaxHealthOp();
+		MaxHealthOpBroken = false;
+	}
+
 	static bool infMana = false;
 	ImGui::Checkbox("Unlimited Mana", &infMana);
-	if (gameHooked && infMana)
-		if (!cheatInstance->InfiniteMana())
-			if (!cheatInstance->IsHooked())
-				gameHooked = false;
+	if (gameHooked && infMana && !cheatInstance->InfiniteMana() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
 	static bool infHealthElixir = false;
 	ImGui::Checkbox("Unlimited Health Elixirs", &infHealthElixir);
-	if (gameHooked && infHealthElixir)
-		if (!cheatInstance->InfiniteHealthElixir())
-			if (!cheatInstance->IsHooked())
-				gameHooked = false;
+	if (gameHooked && infHealthElixir && !cheatInstance->InfiniteHealthElixir() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
 	static bool infManaElixir = false;
 	ImGui::Checkbox("Unlimited Mana Elixirs", &infManaElixir);
-	if (gameHooked && infManaElixir)
-		if (!cheatInstance->InfiniteManaElixir())
-			if (!cheatInstance->IsHooked())
-				gameHooked = false;
+	if (gameHooked && infManaElixir && !cheatInstance->InfiniteManaElixir() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
+	// Abilities section
+	ImGui::SeparatorText("Abilities");
+	static bool noBlinkCooldown = false;
+	ImGui::Checkbox("No Blink Cooldown", &noBlinkCooldown);
+	if (gameHooked && noBlinkCooldown && !cheatInstance->NoBlinkCooldown() && !cheatInstance->IsHooked())
+		gameHooked = false;
 
 	// predefining button lists to simplify creation of buttons
 	const char* buttonIds[] = { "-5", "-1", "+1", "+5" };
 	const int buttonVals[] = { -5, -1, +1, +5 };
 
-	// Elixirs GUI section
-	ImGui::SeparatorText("Elixirs");
+	// Resources GUI section
+	ImGui::SeparatorText("Resources");
 	const char* elixirs[] = { "Health Elixir", "Mana Elixir" };
 	for (int i = 0; i < 2; i++) {
 		ImGui::Text(elixirs[i]);
@@ -257,8 +272,6 @@ void gui::Render() noexcept {
 		}
 	}
 
-	// Resources GUI section
-	ImGui::SeparatorText("Resources");
 	ImGui::Text("Gold / Runes / Rewires");
 	for (int j = 0; j < 4; j++) {
 		ImGui::SameLine();
@@ -283,6 +296,16 @@ void gui::Render() noexcept {
 
 	// Ammo GUI section
 	ImGui::SeparatorText("Ammo");
+	static bool infiniteClip = false;
+	ImGui::Checkbox("Infinite Clip", &infiniteClip);
+	if (gameHooked && infiniteClip && !cheatInstance->InfiniteClip() && cheatInstance->IsHooked())
+		gameHooked = false;
+
+	static bool infiniteAmmo = false;
+	ImGui::Checkbox("Infinite Ammo", &infiniteAmmo);
+	if (gameHooked && infiniteAmmo && !cheatInstance->infiniteAmmo() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
 	const char* equipment[] = { "Bullets", "Explosive Bullets", "Crossbow Bolts", "CrossBow Sleep Darts", 
 								"Crossbow Incendiary Bolts", "Spring Razors", "Grenades", "Sticky Grenades"};
 	for (int i = 0; i < 7; i++) {
