@@ -6,27 +6,31 @@ class DishonoredCheat {
 	Memory gameMemory;
 	uintptr_t client;
 	uintptr_t player;
-	uintptr_t inventory;
 	uintptr_t abilities;
-	uintptr_t equipment;
-	uintptr_t weaponry;
+	uintptr_t inventory;
+	uintptr_t ammo;
 	bool maxHealthOpBroken;
+	bool clipOpBroken;
 	int prevMaxHealthOp[6];
 	int prevHealthOp[6];
+	int prevClipOp[6];
 
 	public:
 		DishonoredCheat();
 		~DishonoredCheat();
 		int RehookGame();
 		int IsHooked();
-		int GetPlayer();
-		int UpdatePlayer();
+		int UpdatePointers();
+		int IsUpdated();
+		int SyncPointers();
 		int InfiniteHealth();
-		int BreakMaxHealthOp();
-		int RestoreMaxHealthOp();
+		void BreakMaxHealthOp();
+		void RestoreMaxHealthOp();
 		int InfiniteMana();
 		int InfiniteHealthElixir();
 		int InfiniteManaElixir();
+		void BreakClipOp();
+		void RestoreClipOp();
 		int InfiniteClip();
 		int infiniteAmmo();
 		int NoBlinkCooldown();
@@ -38,4 +42,5 @@ class DishonoredCheat {
 		uintptr_t getPlayerAddress();
 		uintptr_t getInventoryAddress();
 		uintptr_t getAbilitiesAddress();
+		uintptr_t getEquipment();
 };

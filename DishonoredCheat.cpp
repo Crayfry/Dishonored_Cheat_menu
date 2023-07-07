@@ -10,8 +10,6 @@ namespace offsets {
 	constexpr::std::ptrdiff_t ammo = 0x000000BC;
 	constexpr::std::ptrdiff_t resources = 0x000000C8;
 	constexpr::std::ptrdiff_t abilities = 0x00000AA8;
-	constexpr::std::ptrdiff_t equipment = 0x00FFDF4C;
-	constexpr::std::ptrdiff_t weaponry = 0x00000010;
 
 	constexpr::std::ptrdiff_t resources_size = 0x000000CC;
 	constexpr::std::ptrdiff_t resources_first = 0x00000004;
@@ -43,9 +41,7 @@ namespace offsets {
 	constexpr::std::ptrdiff_t springrazors = 0x00000028;
 	constexpr::std::ptrdiff_t grenades = 0x00000030;
 	constexpr::std::ptrdiff_t stickyGrenades = 0x00000038;
-
-	//equipment offsets
-	constexpr::std::ptrdiff_t clip = 0x00000124;
+	constexpr::std::ptrdiff_t clipOp = 0x0081CA54;
 }
 
 DishonoredCheat::DishonoredCheat() : gameMemory(Memory{ "Dishonored.exe" }) {
@@ -53,17 +49,21 @@ DishonoredCheat::DishonoredCheat() : gameMemory(Memory{ "Dishonored.exe" }) {
 	this->player = this->gameMemory.Read<uintptr_t>(this->client + offsets::player);
 	this->abilities = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::abilities);
 	this->inventory = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::inventory);
-	this->equipment = this->gameMemory.Read<std::uintptr_t>(this->client + offsets::equipment);
-	this->weaponry = this->gameMemory.Read<std::uintptr_t>(this->equipment + offsets::weaponry);
+	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
 	this->maxHealthOpBroken = false;
+	this->clipOpBroken = false;
 }
 
 DishonoredCheat::~DishonoredCheat() {
+	if (prevMaxHealthOp && prevHealthOp)
+		this->RestoreMaxHealthOp();
+
 	delete & this->gameMemory;
 	this->client = NULL;
 	this->player = NULL;
 	this->abilities = NULL;
 	this->inventory = NULL;
+	this->ammo = NULL;
 }
 
 int DishonoredCheat::RehookGame() {
@@ -74,6 +74,7 @@ int DishonoredCheat::RehookGame() {
 	this->player = this->gameMemory.Read<uintptr_t>(this->client + offsets::player);
 	this->abilities = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::abilities);
 	this->inventory = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::inventory);
+	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
 	return 1;
 }
 
@@ -83,86 +84,78 @@ int DishonoredCheat::IsHooked() {
 	return 0;
 }
 
-int DishonoredCheat::GetPlayer() {
+int DishonoredCheat::UpdatePointers() {
 	this->player = this->gameMemory.Read<uintptr_t>(this->client + offsets::player);
 	this->abilities = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::abilities);
 	this->inventory = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::inventory);
-	if (player == 0)
+	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
+	if (this->player == 0)
 		return 0;
 	return 1;
 }
 
-int DishonoredCheat::UpdatePlayer() {
+int DishonoredCheat::IsUpdated() {
 	if (this->player == this->gameMemory.Read<uintptr_t>(this->client + offsets::player))
 		return 1;
-	if (!this->IsHooked())
-		return 0;
-	return this->GetPlayer();
+	return 0;
 }
 
-int DishonoredCheat::InfiniteHealth() {
-	if (!maxHealthOpBroken)
-		this->BreakMaxHealthOp();
-	if (!this->UpdatePlayer())
-		return 0;
-	gameMemory.Write<int>(this->player + offsets::maxHealth, INT_MAX);
-	gameMemory.Write<int>(this->player + offsets::health, INT_MAX);
+int DishonoredCheat::SyncPointers() {
+	if (!this->IsUpdated())
+		if (!this->UpdatePointers())
+			return 0;
 	return 1;
 }
 
-int DishonoredCheat::BreakMaxHealthOp() {
+void DishonoredCheat::BreakMaxHealthOp() {
 	for (int i = 0; i < 6; i++) {
-		if(!prevMaxHealthOp[i])
+		if (!prevMaxHealthOp[i])
 			this->prevMaxHealthOp[i] = gameMemory.Read<BYTE>(client + offsets::maxHealthOp + (0x00000001 * i));
-		if(!prevHealthOp[i])
+		if (!prevHealthOp[i])
 			this->prevHealthOp[i] = gameMemory.Read<BYTE>(client + offsets::healthOp + (0x00000001 * i));
 		this->gameMemory.Write<BYTE>(client + offsets::maxHealthOp + (0x00000001 * i), 144);
 		this->gameMemory.Write<BYTE>(client + offsets::healthOp + (0x00000001 * i), 144);
 	}
 	this->maxHealthOpBroken = true;
-	return 1;
 }
 
-int DishonoredCheat::RestoreMaxHealthOp() {
+void DishonoredCheat::RestoreMaxHealthOp() {
 	for (int i = 0; i < 6; i++) {
 		this->gameMemory.Write<BYTE>(client + offsets::maxHealthOp + (0x00000001 * i), this->prevMaxHealthOp[i]);
 		this->gameMemory.Write<BYTE>(client + offsets::healthOp + (0x00000001 * i), this->prevHealthOp[i]);
 	}
 	this->maxHealthOpBroken = false;
+}
+
+int DishonoredCheat::InfiniteHealth() {
+	if (!maxHealthOpBroken)
+		this->BreakMaxHealthOp();
+	gameMemory.Write<int>(this->player + offsets::maxHealth, INT_MAX);
+	gameMemory.Write<int>(this->player + offsets::health, INT_MAX);
 	return 1;
 }
 
 int DishonoredCheat::InfiniteMana() {
-	if (!this->UpdatePlayer())
-		return 0;
 	gameMemory.Write(this->player + offsets::mana, 100);
 	return 1;
 }
 
 int DishonoredCheat::InfiniteHealthElixir() {
-	if (!this->UpdatePlayer())
-		return 0;
 	gameMemory.Write(this->inventory + offsets::healthElixir, 10);
 	return 1;
 }
 
 int DishonoredCheat::InfiniteManaElixir() {
-	if (!this->UpdatePlayer())
-		return 0;
 	gameMemory.Write(this->inventory + offsets::manaElixir, 10);
 	return 1;
 }
 
 int DishonoredCheat::NoBlinkCooldown() {
-	if (!this->UpdatePlayer())
-		return 0;
 	gameMemory.Write<float>(this->abilities + offsets::blinkCooldown, 1.0);
 	return 1;
 }
 
 int DishonoredCheat::IncreaseElixir(const int type, const int amount) {
-	if (!this->UpdatePlayer())
-		return 0;
 	switch (type) {
 	case 0:
 		gameMemory.Write(this->inventory + offsets::healthElixir, gameMemory.Read<int>(this->inventory + offsets::healthElixir) + amount);
@@ -175,22 +168,17 @@ int DishonoredCheat::IncreaseElixir(const int type, const int amount) {
 	default:
 		break;
 	}
+	return 0;
 }
 
 int DishonoredCheat::IncreaseAmmoCount(const int type, const int amount) {
-	if (!this->UpdatePlayer())
-		return 0;
-	const uintptr_t ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
-	const uintptr_t typeAddress = ammo + (0x00000008 * type);
+	const uintptr_t typeAddress = this->ammo + (0x00000008 * type);
 	gameMemory.Write<int>(typeAddress, gameMemory.Read<int>(typeAddress) + amount);
 	return 1;
 }
 
 int DishonoredCheat::SetAmmoCount(const int type, const int amount) {
-	if (!this->UpdatePlayer())
-		return 0;
-	const uintptr_t ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
-	const uintptr_t typeAddress = ammo + (0x00000008 * type);
+	const uintptr_t typeAddress = this->ammo + (0x00000008 * type);
 	gameMemory.Write<int>(typeAddress, amount);
 	return 1;
 }
@@ -202,16 +190,29 @@ int DishonoredCheat::infiniteAmmo() {
 	return 1;
 }
 
+void DishonoredCheat::BreakClipOp() {
+	for (int i = 0; i < 6; i++) {
+		if (!prevClipOp[i])
+			this->prevClipOp[i] = gameMemory.Read<BYTE>(client + offsets::clipOp + (0x00000001 * i));
+		this->gameMemory.Write<BYTE>(client + offsets::clipOp + (0x00000001 * i), 144);
+	}
+	clipOpBroken = true;
+}
+
+void DishonoredCheat::RestoreClipOp() {
+	for (int i = 0; i < 6; i++) {
+		this->gameMemory.Write<BYTE>(client + offsets::clipOp + (0x00000001 * i), this->prevClipOp[i]);
+	}
+	clipOpBroken = false;
+}
+
 int DishonoredCheat::InfiniteClip() {
-	if (!this->UpdatePlayer())
-		return 0;
-	gameMemory.Write(this->weaponry + offsets::clip, 1);
+	if (!clipOpBroken)
+		this->BreakClipOp();
 	return 1;
 }
 
 int DishonoredCheat::IncreaseResourceCount(const int amount) {
-	if (!this->UpdatePlayer())
-		return 0;
 	const uintptr_t resources = this->gameMemory.Read<std::uintptr_t>(this->inventory + offsets::resources);
 	const int curResourcesSize = gameMemory.Read<int>(inventory + offsets::resources_size);
 	auto curResource = resources + offsets::resources_first;

@@ -185,6 +185,10 @@ void gui::Render() noexcept {
 	static const char* successHook = "Successfully Hooked Game";
 	static const char* failureHook = "Hook Failed";
 
+	// This makes sure the pointers are up-to date
+	if (gameHooked)
+		cheatInstance->SyncPointers();
+
 	//	Hook button
 	if (ImGui::Button("Hook Game")) {
 		cheatInstance = new DishonoredCheat();
@@ -297,9 +301,16 @@ void gui::Render() noexcept {
 	// Ammo GUI section
 	ImGui::SeparatorText("Ammo");
 	static bool infiniteClip = false;
+	static bool clipOpBroken = false;
 	ImGui::Checkbox("Infinite Clip", &infiniteClip);
-	if (gameHooked && infiniteClip && !cheatInstance->InfiniteClip() && cheatInstance->IsHooked())
-		gameHooked = false;
+	if (gameHooked && infiniteClip)
+		if (!cheatInstance->InfiniteClip() && !cheatInstance->IsHooked()) {
+			gameHooked = false;
+		} else {
+			clipOpBroken = true;
+		}
+	if (gameHooked && !infiniteClip && clipOpBroken)
+		cheatInstance->RestoreClipOp();
 
 	static bool infiniteAmmo = false;
 	ImGui::Checkbox("Infinite Ammo", &infiniteAmmo);
