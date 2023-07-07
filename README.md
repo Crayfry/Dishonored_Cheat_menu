@@ -1,6 +1,9 @@
 # Dishonored Cheat menu
 Simple Cheat menu for Dishonored. Uses ImGui and cazz's memory.h file. Big thanks to cazz (https://github.com/cazzwastaken) for memory.h and incredible ImGui tutorials. 
 
+# Usage
+This is an external cheat, meaning you do not need to tamper with any game files. All you need to do to get the cheat to work is making sure the game is running, then click the "hook" button in the cheat and the cheat will attempt to find the game and hook onto it. Once the game has been hooked, the cheat will start working.
+
 # Features
 Unlimited Health, Mana, Elixirs.
 
