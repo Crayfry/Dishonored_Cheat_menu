@@ -43,5 +43,6 @@ The application taskbar name is a bunch of Chinese characters (when running, hov
 When displaying the memory addresses of client, player, and inventory, values are in decimal instead of hex.
 
 # Screenshots
-![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/3e740032-5b71-4e1f-930a-8729178a71cd)
-![Dishonored1](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/2b297736-8482-4d6b-8376-ce0b2b48da50)
+![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/ebc8f43b-8581-4486-85e2-9bada7de5704)
+![Dishonored2](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/1ed33fed-d3e0-4a94-8210-2994fa59f3db)
+
