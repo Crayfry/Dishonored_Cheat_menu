@@ -205,22 +205,48 @@ void gui::Render() noexcept {
 
 	// This displays memory slots for the client, player, inventory
 	if (cheatInstance) {
-		ImGui::Text("Client:");
-		ImGui::SameLine();
-		ImGui::Text((std::to_string(cheatInstance->getClientAddress())).c_str());
-		ImGui::Text("Player:");
-		ImGui::SameLine();
-		ImGui::Text((std::to_string(cheatInstance->getPlayerAddress())).c_str());
-		ImGui::Text("Abilities:");
-		ImGui::SameLine();
-		ImGui::Text((std::to_string(cheatInstance->getAbilitiesAddress())).c_str());
-		ImGui::Text("Inventory:");
-		ImGui::SameLine();
-		ImGui::Text((std::to_string(cheatInstance->getInventoryAddress())).c_str());
+		ImGui::Text("Client: %x", cheatInstance->getClientAddress());
+		ImGui::Text("Player: %x", cheatInstance->getPlayerAddress());
+		ImGui::Text("Abilities: %x", cheatInstance->getAbilitiesAddress());
+		ImGui::Text("Inventory: %x", cheatInstance->getInventoryAddress());
 	}
 
 	// Players GUI section
 	ImGui::SeparatorText("Player");
+	static float curX, curY, curZ;
+	if (cheatInstance) {
+		ImGui::Text("Current Coords");
+		ImGui::Text("X: %f", cheatInstance->GetX());
+		ImGui::Text("Y: %f", cheatInstance->GetY());
+		ImGui::Text("Z: %f", cheatInstance->GetZ());
+	}
+
+	static char posXInput[128];
+	static char posYInput[128];
+	static char posZInput[128];
+	static float posX, posY, posZ;
+	ImGui::Text("Teleport to Coords");
+	ImGui::InputText("X Coord", posXInput, IM_ARRAYSIZE(posXInput));
+	ImGui::InputText("Y Coord", posYInput, IM_ARRAYSIZE(posYInput));
+	ImGui::InputText("Z Coord", posZInput, IM_ARRAYSIZE(posZInput));
+	if (posXInput[0] == '~')
+		posX = cheatInstance->GetX();
+	else
+		posX = atof(posXInput);
+	if (posYInput[0] == '~')
+		posY = cheatInstance->GetY();
+	else
+		posY = atof(posYInput);
+	if (posZInput[0] == '~')
+		posZ = cheatInstance->GetZ();
+	else
+		posZ = atof(posZInput);
+	if(ImGui::Button("Teleport") && gameHooked){
+		if (!cheatInstance->TeleportToCoords(posX, posY, posZ) && !cheatInstance->IsHooked()) {
+			gameHooked = false;
+		}
+	}
+
 	static bool infHealth = false;
 	static bool MaxHealthOpBroken = false;
 	ImGui::Checkbox("Unlimited Health", &infHealth);
@@ -251,12 +277,72 @@ void gui::Render() noexcept {
 	if (gameHooked && infManaElixir && !cheatInstance->InfiniteManaElixir() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
+	//static bool fastAttacks = false;
+	//ImGui::Checkbox("Fast Attack Speed", &fastAttacks);
+	//if (gameHooked && fastAttacks && !cheatInstance->fastAttacks() && !cheatInstance->IsHooked())
+		//gameHooked = false;
+
+	//static bool fovFetched = false;
+	//static float fovCount = 90;
+	//static float lastFov = 90;
+	//ImGui::SliderFloat("Fov", &fovCount, 1,179, "%1.0f");
+	//if (gameHooked && !fovFetched) {
+		//fovCount = cheatInstance->GetFov();
+		//fovFetched = true;
+	//}
+	//if (lastFov != fovCount && gameHooked && !cheatInstance->SetFov(fovCount) && !cheatInstance->IsHooked())
+		//gameHooked = false;
+
+
 	// Abilities section
 	ImGui::SeparatorText("Abilities");
+	static bool UnlimitedDarkVision = false;
+	ImGui::Checkbox("Unlimited Dark Vision", &UnlimitedDarkVision);
+	if (gameHooked && UnlimitedDarkVision && !cheatInstance->UnlimitedDarkVision() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
+	static bool blinkMarker = false;
+	static bool markerLeft = false;
+	ImGui::Checkbox("Leave Blink Marker", &blinkMarker);
+	if (gameHooked && blinkMarker && !markerLeft) {
+		if (!cheatInstance->LeaveBlinkMarker() && !cheatInstance->IsHooked()) {
+			gameHooked = false;
+		}
+		else {
+			markerLeft = true;
+		}
+	}
+	if (!blinkMarker && markerLeft) {
+		markerLeft = false;
+		cheatInstance->RemoveBlinkMarker();
+	}
+
 	static bool noBlinkCooldown = false;
 	ImGui::Checkbox("No Blink Cooldown", &noBlinkCooldown);
 	if (gameHooked && noBlinkCooldown && !cheatInstance->NoBlinkCooldown() && !cheatInstance->IsHooked())
 		gameHooked = false;
+
+	//static bool noRatCooldown = false;
+	//ImGui::Checkbox("No Rat Cooldown", &noRatCooldown);
+	//if (gameHooked && noRatCooldown && !cheatInstance->noRatCooldown() && !cheatInstance->IsHooked())
+		//gameHooked = false;
+
+	//static bool noWindblastCooldown = false;
+	//ImGui::Checkbox("No Windblast Cooldown", &noWindblastCooldown);
+	//if (gameHooked && noWindblastCooldown && !cheatInstance->noWindblastCooldown() && !cheatInstance->IsHooked())
+		//gameHooked = false;
+
+	//static bool unlimitedTimeBend = false;
+	//ImGui::Checkbox("Unlimited Time Bend", &noBlinkCooldown);
+	//if (gameHooked && unlimitedTimeBend && !cheatInstance->UnlimitedTimeBend() && !cheatInstance->IsHooked())
+		//gameHooked = false;
+
+	static bool unlimitedPossession = false;
+	ImGui::Checkbox("Unlimited Possession", &unlimitedPossession);
+	if (gameHooked && unlimitedPossession && !cheatInstance->UnlimitedPossession() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
+	
 
 	// predefining button lists to simplify creation of buttons
 	const char* buttonIds[] = { "-5", "-1", "+1", "+5" };

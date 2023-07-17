@@ -14,6 +14,14 @@ class DishonoredCheat {
 	int prevMaxHealthOp[6];
 	int prevHealthOp[6];
 	int prevClipOp[6];
+	bool blinkMarkerLeft;
+	float blinkMarkerX;
+	float blinkMarkerY;
+	float blinkMarkerZ;
+	bool blinkDistOpBroken;
+	int prevBlinkDistOpX[3];
+	int prevBlinkDistOpY[3];
+	int prevBlinkDistOpZ[3];
 
 	public:
 		DishonoredCheat();
@@ -26,14 +34,27 @@ class DishonoredCheat {
 		int InfiniteHealth();
 		void BreakMaxHealthOp();
 		void RestoreMaxHealthOp();
+		float GetX();
+		float GetY();
+		float GetZ();
+		int TeleportToCoords(float x, float y, float z);
+		int GetFov();
+		int SetFov(float fovCount);
 		int InfiniteMana();
 		int InfiniteHealthElixir();
 		int InfiniteManaElixir();
+		int UnlimitedDarkVision();
 		void BreakClipOp();
 		void RestoreClipOp();
 		int InfiniteClip();
 		int infiniteAmmo();
+		int SetBlinkDist(float x, float y, float z);
+		void BreakBlinkDistOp();
+		void RestoreBlinkDistOp();
+		int LeaveBlinkMarker();
+		int RemoveBlinkMarker();
 		int NoBlinkCooldown();
+		int UnlimitedPossession();
 		int IncreaseElixir(const int type, const int amount);
 		int IncreaseAmmoCount(const int type, const int amount);
 		int SetAmmoCount(const int type, const int amount);
@@ -42,5 +63,4 @@ class DishonoredCheat {
 		uintptr_t getPlayerAddress();
 		uintptr_t getInventoryAddress();
 		uintptr_t getAbilitiesAddress();
-		uintptr_t getEquipment();
 };

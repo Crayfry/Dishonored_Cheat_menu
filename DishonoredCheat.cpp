@@ -16,7 +16,18 @@ namespace offsets {
 	constexpr::std::ptrdiff_t resources_gap = 0x0000000C;
 
 	//ability offsets
+	constexpr::std::ptrdiff_t darkVisionInfo = 0x00000AB0;
+	constexpr::std::ptrdiff_t darkVisionDuration = 0x00000094;
+	constexpr::std::ptrdiff_t blinkDistOp = 0x007F5E1F;
+	constexpr::std::ptrdiff_t blinkDistOpX = 0x007F5E29;
+	constexpr::std::ptrdiff_t blinkDistOpY = 0x007F5E44;
+	constexpr::std::ptrdiff_t blinkDistOpZ = 0x007F5E4C;
+	constexpr::std::ptrdiff_t blinkDistX = 0x00000060;
+	constexpr::std::ptrdiff_t blinkDistY = 0x00000064;
+	constexpr::std::ptrdiff_t blinkDistZ = 0x00000068;
 	constexpr::std::ptrdiff_t blinkCooldown = 0x00000138;
+	constexpr::std::ptrdiff_t possessionInfo = 0x00000AAC;
+	constexpr::std::ptrdiff_t possessionDuration = 0x00000094;
 
 	//player offsets
 	constexpr::std::ptrdiff_t X = 0x000000C4;
@@ -52,6 +63,8 @@ DishonoredCheat::DishonoredCheat() : gameMemory(Memory{ "Dishonored.exe" }) {
 	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
 	this->maxHealthOpBroken = false;
 	this->clipOpBroken = false;
+	this->blinkMarkerLeft = false;
+	this->blinkDistOpBroken = false;
 }
 
 DishonoredCheat::~DishonoredCheat() {
@@ -127,6 +140,58 @@ void DishonoredCheat::RestoreMaxHealthOp() {
 	this->maxHealthOpBroken = false;
 }
 
+void DishonoredCheat::BreakBlinkDistOp() {
+	for (int i = 0; i < 3; i++) {
+		if (!prevBlinkDistOpX[i])
+			this->prevBlinkDistOpX[i] = gameMemory.Read<BYTE>(client + offsets::blinkDistOpX + (0x00000001 * i));
+		if (!prevBlinkDistOpY[i])
+			this->prevBlinkDistOpY[i] = gameMemory.Read<BYTE>(client + offsets::blinkDistOpY + (0x00000001 * i));
+		if (!prevBlinkDistOpZ[i])
+			this->prevBlinkDistOpZ[i] = gameMemory.Read<BYTE>(client + offsets::blinkDistOpZ + (0x00000001 * i));
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpX + (0x00000001 * i), 144);
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpY + (0x00000001 * i), 144);
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpZ + (0x00000001 * i), 144);
+	}
+	this->blinkDistOpBroken = true;
+}
+
+void DishonoredCheat::RestoreBlinkDistOp() {
+	for (int i = 0; i < 3; i++) {
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpX + (0x00000001 * i), this->prevBlinkDistOpX[i]);
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpY + (0x00000001 * i), this->prevBlinkDistOpY[i]);
+		this->gameMemory.Write<BYTE>(client + offsets::blinkDistOpZ + (0x00000001 * i), this->prevBlinkDistOpZ[i]);
+	}
+	this->blinkDistOpBroken = false;
+}
+
+float DishonoredCheat::GetX() {
+	return gameMemory.Read<float>(this->player + offsets::X);
+}
+
+float DishonoredCheat::GetY() {
+	return gameMemory.Read<float>(this->player + offsets::Y);
+}
+
+float DishonoredCheat::GetZ() {
+	return gameMemory.Read<float>(this->player + offsets::Z);
+}
+
+int DishonoredCheat::TeleportToCoords(float x, float y, float z) {
+	gameMemory.Write<float>(this->player + offsets::X, x);
+	gameMemory.Write<float>(this->player + offsets::Y, y);
+	gameMemory.Write<float>(this->player + offsets::Z, z);
+	return 1;
+}
+
+int DishonoredCheat::GetFov() {
+	return 1;//gameMemory.Read<float>(client + offsets::fov);
+}
+
+int DishonoredCheat::SetFov(float fovCount) {
+	//gameMemory.Write<float>(client + offsets::fov, (float)fovCount);
+	return 1;
+}
+
 int DishonoredCheat::InfiniteHealth() {
 	if (!maxHealthOpBroken)
 		this->BreakMaxHealthOp();
@@ -150,8 +215,45 @@ int DishonoredCheat::InfiniteManaElixir() {
 	return 1;
 }
 
+int DishonoredCheat::UnlimitedDarkVision() {
+	gameMemory.Write<float>(gameMemory.Read<uintptr_t>(this->player + offsets::darkVisionInfo) + offsets::darkVisionDuration, 1);
+	return 1;
+}
+
+int DishonoredCheat::SetBlinkDist(float x, float y, float z) {
+	gameMemory.Write<float>(this->abilities + offsets::blinkDistX, x);
+	gameMemory.Write<float>(this->abilities + offsets::blinkDistY, y);
+	gameMemory.Write<float>(this->abilities + offsets::blinkDistZ, z);
+	return 1;
+}
+
+int DishonoredCheat::LeaveBlinkMarker() {
+	if (!this->blinkDistOpBroken)
+		this->BreakBlinkDistOp();
+	if (!blinkMarkerLeft) {
+		this->blinkMarkerX = gameMemory.Read<float>(this->player + offsets::X);
+		this->blinkMarkerY = gameMemory.Read<float>(this->player + offsets::Y);
+		this->blinkMarkerZ = gameMemory.Read<float>(this->player + offsets::Z);
+		blinkMarkerLeft = true;
+	}
+	this->SetBlinkDist(blinkMarkerX, blinkMarkerY, blinkMarkerZ);
+	return 1;
+}
+
+int DishonoredCheat::RemoveBlinkMarker() {
+	blinkMarkerLeft = false;
+	RestoreBlinkDistOp();
+	blinkDistOpBroken = false;
+	return 1;
+}
+
 int DishonoredCheat::NoBlinkCooldown() {
 	gameMemory.Write<float>(this->abilities + offsets::blinkCooldown, 1.0);
+	return 1;
+}
+
+int DishonoredCheat::UnlimitedPossession() {
+	gameMemory.Write<float>(gameMemory.Read<uintptr_t>(this->player + offsets::possessionInfo) + offsets::possessionDuration, 14.0);
 	return 1;
 }
 
