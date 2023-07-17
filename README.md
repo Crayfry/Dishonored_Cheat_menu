@@ -1,5 +1,5 @@
 # Dishonored Cheat menu
-Simple Cheat menu for Dishonored 1. Use at your own risk as this application might crash and corrupt your game/saves.
+Simple Cheat menu for Dishonored 1 Steam version. Use at your own risk as this application might crash and corrupt your game/saves.
 
 Uses ImGui and cazz's memory.h file. Big thanks to cazz (https://github.com/cazzwastaken) for memory.h and incredible ImGui tutorials. 
 
@@ -7,16 +7,22 @@ Uses ImGui and cazz's memory.h file. Big thanks to cazz (https://github.com/cazz
 This is an external cheat, meaning you do not need to tamper with any game files. All you need to do is click the "hook game" button in the cheat, while the game is running, then the cheat will attempt to find and hook onto the game. The cheat looks for "Dishonored.exe" specifically, so you might need to rename the game exe file. Once the game has been hooked, the cheat will start working.
 
 # Features
-Unlimited Health, Mana, Elixirs.
+Unlimited health, mana, elixirs, ammo, clip (no reload).
 
-Add/Remove ammo and resources.
+Remove Blink cooldown, Unlimited duration for Dark Vision and Possession, and setting blink marker on current position.
+
+Add/Remove specific ammo, resources, and elixirs.
 
 # Features in Development
-Remove ability cooldowns.
+Unlimited Time Bend.
 
-Infinite ability timers.
+Fast attack speed.
 
-Invisibility
+Remove all abilities.
+
+Add/Remove all weapons.
+
+Invisibility.
 
 # Build
 If you'd like to build the project from the source, here is how to do it:
