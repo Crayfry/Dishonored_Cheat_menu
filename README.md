@@ -40,7 +40,7 @@ The exe file should appear in a "build" file that wasn't in the folder before.
 # Current Bugs/Unintended Features
 The application taskbar name is a bunch of Chinese characters (when running, hover over the application on the taskbar).
 
-When displaying the memory addresses of client, player, and inventory, values are in decimal instead of hex.
+When exiting out of the cheat while having infinite clip or unlimited health or leave Blink marker on, the cheat will break the game and those functionalities will stay present until a new save is loading or the game is restarted. To avoid this, just uncheck these options before closing the cheat.
 
 # Screenshots
 ![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/ebc8f43b-8581-4486-85e2-9bada7de5704)
