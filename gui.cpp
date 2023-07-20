@@ -209,6 +209,7 @@ void gui::Render() noexcept {
 		ImGui::Text("Player: %x", cheatInstance->getPlayerAddress());
 		ImGui::Text("Abilities: %x", cheatInstance->getAbilitiesAddress());
 		ImGui::Text("Inventory: %x", cheatInstance->getInventoryAddress());
+		ImGui::Text("Assets: %x", cheatInstance->getAssets());
 	}
 
 	// Players GUI section
@@ -241,6 +242,7 @@ void gui::Render() noexcept {
 		posZ = cheatInstance->GetZ();
 	else
 		posZ = atof(posZInput);
+
 	if(ImGui::Button("Teleport") && gameHooked){
 		if (!cheatInstance->TeleportToCoords(posX, posY, posZ) && !cheatInstance->IsHooked()) {
 			gameHooked = false;
@@ -249,7 +251,7 @@ void gui::Render() noexcept {
 
 	static bool infHealth = false;
 	static bool MaxHealthOpBroken = false;
-	ImGui::Checkbox("Unlimited Health", &infHealth);
+	ImGui::Checkbox("Infinite Health", &infHealth);
 	if (gameHooked && infHealth) {
 		if (!cheatInstance->InfiniteHealth() && !cheatInstance->IsHooked()) {
 			gameHooked = false;
@@ -263,18 +265,23 @@ void gui::Render() noexcept {
 	}
 
 	static bool infMana = false;
-	ImGui::Checkbox("Unlimited Mana", &infMana);
+	ImGui::Checkbox("Infinite Mana", &infMana);
 	if (gameHooked && infMana && !cheatInstance->InfiniteMana() && !cheatInstance->IsHooked())
+		gameHooked = false;
+
+	static bool infOxy = false;
+	ImGui::Checkbox("Infinite Oxygen", &infOxy);
+	if (gameHooked && infOxy && !cheatInstance->InfiniteOxygen() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	static bool infHealthElixir = false;
 	ImGui::Checkbox("Unlimited Health Elixirs", &infHealthElixir);
-	if (gameHooked && infHealthElixir && !cheatInstance->InfiniteHealthElixir() && !cheatInstance->IsHooked())
+	if (gameHooked && infHealthElixir && !cheatInstance->UnlimitedHealthElixir() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	static bool infManaElixir = false;
 	ImGui::Checkbox("Unlimited Mana Elixirs", &infManaElixir);
-	if (gameHooked && infManaElixir && !cheatInstance->InfiniteManaElixir() && !cheatInstance->IsHooked())
+	if (gameHooked && infManaElixir && !cheatInstance->UnlimitedManaElixir() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	//static bool fastAttacks = false;
@@ -296,9 +303,9 @@ void gui::Render() noexcept {
 
 	// Abilities section
 	ImGui::SeparatorText("Abilities");
-	static bool UnlimitedDarkVision = false;
-	ImGui::Checkbox("Unlimited Dark Vision", &UnlimitedDarkVision);
-	if (gameHooked && UnlimitedDarkVision && !cheatInstance->UnlimitedDarkVision() && !cheatInstance->IsHooked())
+	static bool infDarkVision = false;
+	ImGui::Checkbox("Infinite Dark Vision", &infDarkVision);
+	if (gameHooked && infDarkVision && !cheatInstance->InfiniteDarkVision() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	static bool blinkMarker = false;
@@ -322,24 +329,23 @@ void gui::Render() noexcept {
 	if (gameHooked && noBlinkCooldown && !cheatInstance->NoBlinkCooldown() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
-	//static bool noRatCooldown = false;
-	//ImGui::Checkbox("No Rat Cooldown", &noRatCooldown);
-	//if (gameHooked && noRatCooldown && !cheatInstance->noRatCooldown() && !cheatInstance->IsHooked())
-		//gameHooked = false;
+	static bool blinkHeightIncrease = false;
+	ImGui::Checkbox("Increase Blink Height", &blinkHeightIncrease);
+	if (gameHooked && blinkHeightIncrease && !cheatInstance->SetBlinkHeight(1000.0) && !cheatInstance->IsHooked())
+		gameHooked = false;
+	if (gameHooked && !blinkHeightIncrease)
+		cheatInstance->SetBlinkHeight(500.0);
 
-	//static bool noWindblastCooldown = false;
-	//ImGui::Checkbox("No Windblast Cooldown", &noWindblastCooldown);
-	//if (gameHooked && noWindblastCooldown && !cheatInstance->noWindblastCooldown() && !cheatInstance->IsHooked())
-		//gameHooked = false;
+	static bool infTimeBend = false;
+	ImGui::Checkbox("Infinite Bend Time", &infTimeBend);
+	if (gameHooked && infTimeBend && !cheatInstance->InfiniteBendTime() && !cheatInstance->IsHooked())
+		gameHooked = false;
+	if (gameHooked && !infTimeBend)
+		cheatInstance->InfiniteBendTimeOff();
 
-	//static bool unlimitedTimeBend = false;
-	//ImGui::Checkbox("Unlimited Time Bend", &noBlinkCooldown);
-	//if (gameHooked && unlimitedTimeBend && !cheatInstance->UnlimitedTimeBend() && !cheatInstance->IsHooked())
-		//gameHooked = false;
-
-	static bool unlimitedPossession = false;
-	ImGui::Checkbox("Unlimited Possession", &unlimitedPossession);
-	if (gameHooked && unlimitedPossession && !cheatInstance->UnlimitedPossession() && !cheatInstance->IsHooked())
+	static bool infPossession = false;
+	ImGui::Checkbox("Infinite Possession", &infPossession);
+	if (gameHooked && infPossession && !cheatInstance->InfinitePossession() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	
@@ -386,21 +392,21 @@ void gui::Render() noexcept {
 
 	// Ammo GUI section
 	ImGui::SeparatorText("Ammo");
-	static bool infiniteClip = false;
+	static bool infClip = false;
 	static bool clipOpBroken = false;
-	ImGui::Checkbox("Infinite Clip", &infiniteClip);
-	if (gameHooked && infiniteClip)
-		if (!cheatInstance->InfiniteClip() && !cheatInstance->IsHooked()) {
+	ImGui::Checkbox("Infinite Clip", &infClip);
+	if (gameHooked && infClip)
+		if (!cheatInstance->UnlimitedClip() && !cheatInstance->IsHooked()) {
 			gameHooked = false;
 		} else {
 			clipOpBroken = true;
 		}
-	if (gameHooked && !infiniteClip && clipOpBroken)
+	if (gameHooked && !infClip && clipOpBroken)
 		cheatInstance->RestoreClipOp();
 
 	static bool infiniteAmmo = false;
-	ImGui::Checkbox("Infinite Ammo", &infiniteAmmo);
-	if (gameHooked && infiniteAmmo && !cheatInstance->infiniteAmmo() && !cheatInstance->IsHooked())
+	ImGui::Checkbox("Unlimited Ammo", &infiniteAmmo);
+	if (gameHooked && infiniteAmmo && !cheatInstance->UnlimitedAmmo() && !cheatInstance->IsHooked())
 		gameHooked = false;
 
 	const char* equipment[] = { "Bullets", "Explosive Bullets", "Crossbow Bolts", "CrossBow Sleep Darts", 
