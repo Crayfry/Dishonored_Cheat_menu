@@ -14,15 +14,10 @@ Abilities: Remove Blink cooldown, increase Blink's height, setting the blink des
 Inventory: Add/Remove specific ammo, resources, and elixirs.
 
 # Features in Development (these will be the last features added)
-Fast attack speed.
-
-Noclip.
 
 Invisibility.
 
 Set and reset character's stats, weapons, and abilities.
-
-GUI upgrade - hotkey to bring up menu and binding cheats to buttons.
 
 # Current Bugs/Unintended Features
 When increasing runes, gold, or rewires, you must have atleast 1 to increase the amount. It works like this because the cheat only increases the amount of the items in the inventory but does not create new items in it.
