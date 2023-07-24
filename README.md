@@ -41,7 +41,6 @@ Now you are able to build the project- click on Build at the top-left of visual 
 
 The exe file should appear in a "build" file that wasn't in the folder before.
 
-# Screenshots (Slightly Outdated)
-![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/ebc8f43b-8581-4486-85e2-9bada7de5704)
-![Dishonored2](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/1ed33fed-d3e0-4a94-8210-2994fa59f3db)
-
+# Screenshots
+![Dishonored](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/0e4df8d6-5c9c-4f1e-9619-c13580af6eb4)
+![Dishonored1](https://github.com/Crayfry/Dishonored_Cheat_menu/assets/52294803/b8b6a2e9-6fd8-498a-a69b-9c89937151b9)
