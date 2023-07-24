@@ -4,6 +4,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_win32.h"
+#include <map>
+#include <unordered_map>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND window, UINT message, WPARAM wideParameter, LPARAM longParameter);
 
@@ -175,251 +177,419 @@ void gui::EndRender() noexcept {
 		ResetDevice();
 }
 void gui::Render() noexcept {
-	static DishonoredCheat* cheatInstance;
-	ImGui::SetNextWindowPos({ 0, 0 });
-	ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
-	ImGui::Begin("Dishonored Cheat", &exit, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
-	
-	// GUI Begins here
-	static bool gameHooked = false;
+
+	// optionsBool
+	enum {
+		invis, infHealth, infMana, infOxy, infHealthElixir, infManaElixir, infDarkVision, 
+		blinkMarker, noBlinkCooldown, blinkHeightIncrease, infTimeBend, infPossession, infClip, infAmmo
+	};
+
+	// otherBool
+	enum {
+		gameHooked, showBinds, lastState
+	};
+
+	// predefining some stuff to simplify creation of gui
+	const char* buttonIds[] = { "-5", "-1", "+1", "+5" };
+	const int buttonVals[] = { -5, -1, +1, +5 };
+
+	const char* elixirs[] = { "Health Elixir", "Mana Elixir" };
+	const char* equipment[] = { "Bullets", "Explosive Bullets", "Crossbow Bolts", "CrossBow Sleep Darts",
+								"Crossbow Incendiary Bolts", "Spring Razors", "Grenades", "Sticky Grenades" };
+
 	static const char* successHook = "Successfully Hooked Game";
 	static const char* failureHook = "Hook Failed";
 
-	// This makes sure the pointers are up-to date
-	if (gameHooked)
-		cheatInstance->SyncPointers();
+	static DishonoredCheat* cheatInstance;
 
-	//	Hook button
-	if (ImGui::Button("Hook Game")) {
-		cheatInstance = new DishonoredCheat();
-		if (cheatInstance->IsHooked())
-			gameHooked = true;
-		else
-			gameHooked = false;
+	const char* options[14] = { "Invisibility", "Infinite Health", "Infinite Mana", "Infinite Oxygen", "Unlimited Health Elixirs", 
+								"Unlimited Mana Elixirs", "Infinite Dark Vision", "Leave Blink Destination", "No Blink Cooldown", "Increase Blink Height", 
+								"Infinite Bend Time", "Infinite Possession", "Infinite Clip", "Unlimited Ammo" };
+	const int optionsSize = 14;
+
+	static bool optionsBool[14] = { false, false, false, false, false , false , false,
+				false, false, false, false, false, false };
+
+	static bool otherBool[3] = { false, false, false };
+
+	static std::map<const char*, int> keyBinds;
+	static std::map<const char*, char*> showKeyBinds;
+	static bool once = false;
+	if (!once) {
+		for (auto option : options) {
+			keyBinds[option] = '\0';
+			showKeyBinds[option] = (char*) "Not Bound";
+		}
 	}
-	ImGui::SameLine();
-	if (gameHooked)
-		ImGui::TextColored(ImVec4(0, 185, 0, 100), successHook);
-	else
-		ImGui::TextColored(ImVec4(185, 0, 0, 100), failureHook);
+	once = true;
 
-	// This displays memory slots for the client, player, inventory
-	if (cheatInstance) {
-		ImGui::Text("Client: %x", cheatInstance->getClientAddress());
-		ImGui::Text("Player: %x", cheatInstance->getPlayerAddress());
-		ImGui::Text("Abilities: %x", cheatInstance->getAbilitiesAddress());
-		ImGui::Text("Inventory: %x", cheatInstance->getInventoryAddress());
-		ImGui::Text("Assets: %x", cheatInstance->getAssets());
+	static std::unordered_map<int, ImGuiKey> imGuiIntToKey = {
+		{513,ImGuiKey_LeftArrow},
+		{514,ImGuiKey_RightArrow},
+		{515,ImGuiKey_UpArrow},
+		{516,ImGuiKey_DownArrow},
+		{517,ImGuiKey_PageUp},
+		{518,ImGuiKey_PageDown},
+		{519,ImGuiKey_Home},
+		{520,ImGuiKey_End},
+		{521,ImGuiKey_Insert},
+		{522,ImGuiKey_Delete},
+		{523,ImGuiKey_Backspace},
+		{524,ImGuiKey_Space},
+		{525,ImGuiKey_Enter},
+		{526,ImGuiKey_Escape},
+		{527,ImGuiKey_LeftCtrl},
+		{528,ImGuiKey_LeftShift},
+		{529,ImGuiKey_LeftAlt},
+		{530,ImGuiKey_LeftSuper},
+		{531,ImGuiKey_RightCtrl},
+		{532,ImGuiKey_RightShift},
+		{533,ImGuiKey_RightAlt},
+		{534,ImGuiKey_RightSuper},
+		{535,ImGuiKey_Menu},
+		{536,ImGuiKey_0},
+		{537,ImGuiKey_1},
+		{538,ImGuiKey_2},
+		{539,ImGuiKey_3},
+		{540,ImGuiKey_4},
+		{541,ImGuiKey_5},
+		{542,ImGuiKey_6},
+		{543,ImGuiKey_7},
+		{544,ImGuiKey_8},
+		{545,ImGuiKey_9},
+		{546,ImGuiKey_A},
+		{547,ImGuiKey_B},
+		{548,ImGuiKey_C},
+		{549,ImGuiKey_D},
+		{550,ImGuiKey_E},
+		{551,ImGuiKey_F},
+		{552,ImGuiKey_G},
+		{553,ImGuiKey_H},
+		{554,ImGuiKey_I},
+		{555,ImGuiKey_J},
+		{556,ImGuiKey_K},
+		{557,ImGuiKey_L},
+		{558,ImGuiKey_M},
+		{559,ImGuiKey_N},
+		{560,ImGuiKey_O},
+		{561,ImGuiKey_P},
+		{562,ImGuiKey_Q},
+		{563,ImGuiKey_R},
+		{564,ImGuiKey_S},
+		{565,ImGuiKey_T},
+		{566,ImGuiKey_U},
+		{567,ImGuiKey_V},
+		{568,ImGuiKey_W},
+		{569,ImGuiKey_X},
+		{570,ImGuiKey_Y},
+		{571,ImGuiKey_Z},
+		{572,ImGuiKey_F1},
+		{573,ImGuiKey_F2},
+		{574,ImGuiKey_F3},
+		{575,ImGuiKey_F4},
+		{576,ImGuiKey_F5},
+		{577,ImGuiKey_F6},
+		{578,ImGuiKey_F7},
+		{579,ImGuiKey_F8},
+		{580,ImGuiKey_F9},
+		{581,ImGuiKey_F10},
+		{582,ImGuiKey_F11},
+		{583,ImGuiKey_F12},
+		{584,ImGuiKey_Apostrophe},
+		{585,ImGuiKey_Comma},
+		{586,ImGuiKey_Minus},
+		{587,ImGuiKey_Period},
+		{588,ImGuiKey_Slash},
+		{589,ImGuiKey_Semicolon},
+		{590,ImGuiKey_Equal},
+		{591,ImGuiKey_LeftBracket},
+		{592,ImGuiKey_Backslash},
+		{593,ImGuiKey_RightBracket},
+		{594,ImGuiKey_GraveAccent},
+		{595,ImGuiKey_CapsLock},
+		{596,ImGuiKey_ScrollLock},
+		{597,ImGuiKey_NumLock},
+		{598,ImGuiKey_PrintScreen},
+		{599,ImGuiKey_Pause},
+		{600,ImGuiKey_Keypad0},
+		{601,ImGuiKey_Keypad1},
+		{602,ImGuiKey_Keypad2},
+		{603,ImGuiKey_Keypad3},
+		{604,ImGuiKey_Keypad4},
+		{605,ImGuiKey_Keypad5},
+		{606,ImGuiKey_Keypad6},
+		{607,ImGuiKey_Keypad7},
+		{608,ImGuiKey_Keypad8},
+		{609,ImGuiKey_Keypad9},
+		{610,ImGuiKey_KeypadDecimal},
+		{611,ImGuiKey_KeypadDivide},
+		{612,ImGuiKey_KeypadMultiply},
+		{613,ImGuiKey_KeypadSubtract},
+		{614,ImGuiKey_KeypadAdd},
+		{615,ImGuiKey_KeypadEnter},
+		{616,ImGuiKey_KeypadEqual}
+	};
+
+	static std::unordered_map<ImGuiKey, int> imGuiToVK = {
+		// predefining misc keys
+		{ImGuiKey_Tab, VK_TAB},
+		{ImGuiKey_LeftArrow, VK_LEFT},
+		{ImGuiKey_RightArrow, VK_RIGHT},
+		{ImGuiKey_UpArrow, VK_UP},
+		{ImGuiKey_DownArrow, VK_DOWN},
+		{ImGuiKey_PageUp, VK_PRIOR},
+		{ImGuiKey_PageDown, VK_NEXT},
+		{ImGuiKey_Home, VK_HOME},
+		{ImGuiKey_End, VK_END},
+		{ImGuiKey_Insert, VK_INSERT},
+		{ImGuiKey_Delete, VK_DELETE},
+		{ImGuiKey_Backspace, VK_BACK},
+		{ImGuiKey_Space, VK_SPACE},
+		{ImGuiKey_Enter, VK_RETURN},
+		{ImGuiKey_Escape, VK_ESCAPE},
+		{ImGuiKey_LeftCtrl, VK_CONTROL},
+		{ImGuiKey_LeftShift, VK_LSHIFT},
+		{ImGuiKey_LeftAlt, VK_LMENU},
+		{ImGuiKey_RightCtrl, VK_CONTROL},
+		{ImGuiKey_RightShift, VK_RSHIFT},
+		{ImGuiKey_RightAlt, VK_RMENU},
+		{ImGuiKey_Menu, VK_MENU},
+		{ImGuiKey_Apostrophe, VK_OEM_7},
+		{ImGuiKey_Comma, VK_OEM_COMMA},
+		{ImGuiKey_Minus, VK_OEM_MINUS},
+		{ImGuiKey_Period, VK_OEM_PERIOD},
+		{ImGuiKey_Slash, VK_OEM_2},
+		{ImGuiKey_Semicolon, VK_OEM_1},
+		{ImGuiKey_Equal, VK_OEM_PLUS},
+		{ImGuiKey_LeftBracket, VK_OEM_4},
+		{ImGuiKey_Backslash, VK_OEM_5},
+		{ImGuiKey_RightBracket, VK_OEM_6},
+		{ImGuiKey_GraveAccent, VK_OEM_3},
+		{ImGuiKey_CapsLock, VK_CAPITAL},
+		{ImGuiKey_ScrollLock, VK_SCROLL},
+		{ImGuiKey_NumLock, VK_NUMLOCK},
+		{ImGuiKey_PrintScreen, VK_SNAPSHOT},
+		{ImGuiKey_Pause, VK_PAUSE},
+		{ImGuiKey_Keypad0, VK_NUMPAD0},
+		{ImGuiKey_Keypad1, VK_NUMPAD1},
+		{ImGuiKey_Keypad2, VK_NUMPAD2},
+		{ImGuiKey_Keypad3, VK_NUMPAD3},
+		{ImGuiKey_Keypad4, VK_NUMPAD4},
+		{ImGuiKey_Keypad5, VK_NUMPAD5},
+		{ImGuiKey_Keypad6, VK_NUMPAD6},
+		{ImGuiKey_Keypad7, VK_NUMPAD7},
+		{ImGuiKey_Keypad8, VK_NUMPAD8},
+		{ImGuiKey_Keypad9, VK_NUMPAD9},
+		{ImGuiKey_KeypadDecimal, VK_DECIMAL},
+		{ImGuiKey_KeypadDivide, VK_DIVIDE},
+		{ImGuiKey_KeypadMultiply, VK_MULTIPLY},
+		{ImGuiKey_KeypadSubtract, VK_SUBTRACT},
+		{ImGuiKey_KeypadAdd, VK_ADD},
+		{ImGuiKey_KeypadEnter, VK_RETURN}
+	};
+
+	// adding the alphabet
+	for (int i = 0; i < 26; i++) {
+		imGuiToVK[imGuiIntToKey[i+546]] = 65 + i;
+	}
+	// adding function keys
+	for (int i = 0; i < 12; i++) {
+		imGuiToVK[imGuiIntToKey[i+572]] = 112 + i;
+	}
+	// adding number keys
+	for (int i = 0; i < 10; i++) {
+		imGuiToVK[imGuiIntToKey[i+536]] = 48 + i;
 	}
 
-	// Players GUI section
-	ImGui::SeparatorText("Player");
+	// Button Binds
+	if (!otherBool[showBinds])
+		for (int i = 0; i < optionsSize; i++)
+			if (!otherBool[lastState] && GetAsyncKeyState(keyBinds[options[i]]))
+				optionsBool[i] = !optionsBool[i];
+
 	static float curX, curY, curZ;
-	if (cheatInstance) {
-		ImGui::Text("Current Coords");
-		ImGui::Text("X: %f", cheatInstance->GetX());
-		ImGui::Text("Y: %f", cheatInstance->GetY());
-		ImGui::Text("Z: %f", cheatInstance->GetZ());
-	}
-
 	static char posXInput[128];
 	static char posYInput[128];
 	static char posZInput[128];
 	static float posX, posY, posZ;
-	ImGui::Text("Teleport to Coords");
-	ImGui::InputText("X Coord", posXInput, IM_ARRAYSIZE(posXInput));
-	ImGui::InputText("Y Coord", posYInput, IM_ARRAYSIZE(posYInput));
-	ImGui::InputText("Z Coord", posZInput, IM_ARRAYSIZE(posZInput));
-	if (posXInput[0] == '~')
-		posX = cheatInstance->GetX();
-	else
-		posX = atof(posXInput);
-	if (posYInput[0] == '~')
-		posY = cheatInstance->GetY();
-	else
-		posY = atof(posYInput);
-	if (posZInput[0] == '~')
-		posZ = cheatInstance->GetZ();
-	else
-		posZ = atof(posZInput);
 
-	if(ImGui::Button("Teleport") && gameHooked){
-		if (!cheatInstance->TeleportToCoords(posX, posY, posZ) && !cheatInstance->IsHooked()) {
-			gameHooked = false;
-		}
-	}
-
-	static bool infHealth = false;
-	static bool MaxHealthOpBroken = false;
-	ImGui::Checkbox("Infinite Health", &infHealth);
-	if (gameHooked && infHealth) {
-		if (!cheatInstance->InfiniteHealth() && !cheatInstance->IsHooked()) {
-			gameHooked = false;
-		} else {
-			MaxHealthOpBroken = true;
-		}
-	}
-	if (gameHooked && !infHealth && MaxHealthOpBroken) {
-		cheatInstance->RestoreMaxHealthOp();
-		MaxHealthOpBroken = false;
-	}
-
-	static bool infMana = false;
-	ImGui::Checkbox("Infinite Mana", &infMana);
-	if (gameHooked && infMana && !cheatInstance->InfiniteMana() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	static bool infOxy = false;
-	ImGui::Checkbox("Infinite Oxygen", &infOxy);
-	if (gameHooked && infOxy && !cheatInstance->InfiniteOxygen() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	static bool infHealthElixir = false;
-	ImGui::Checkbox("Unlimited Health Elixirs", &infHealthElixir);
-	if (gameHooked && infHealthElixir && !cheatInstance->UnlimitedHealthElixir() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	static bool infManaElixir = false;
-	ImGui::Checkbox("Unlimited Mana Elixirs", &infManaElixir);
-	if (gameHooked && infManaElixir && !cheatInstance->UnlimitedManaElixir() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	//static bool fastAttacks = false;
-	//ImGui::Checkbox("Fast Attack Speed", &fastAttacks);
-	//if (gameHooked && fastAttacks && !cheatInstance->fastAttacks() && !cheatInstance->IsHooked())
-		//gameHooked = false;
-
-	//static bool fovFetched = false;
-	//static float fovCount = 90;
-	//static float lastFov = 90;
-	//ImGui::SliderFloat("Fov", &fovCount, 1,179, "%1.0f");
-	//if (gameHooked && !fovFetched) {
-		//fovCount = cheatInstance->GetFov();
-		//fovFetched = true;
-	//}
-	//if (lastFov != fovCount && gameHooked && !cheatInstance->SetFov(fovCount) && !cheatInstance->IsHooked())
-		//gameHooked = false;
-
-
-	// Abilities section
-	ImGui::SeparatorText("Abilities");
-	static bool infDarkVision = false;
-	ImGui::Checkbox("Infinite Dark Vision", &infDarkVision);
-	if (gameHooked && infDarkVision && !cheatInstance->InfiniteDarkVision() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	static bool blinkMarker = false;
-	static bool markerLeft = false;
-	ImGui::Checkbox("Leave Blink Marker", &blinkMarker);
-	if (gameHooked && blinkMarker && !markerLeft) {
-		if (!cheatInstance->LeaveBlinkMarker() && !cheatInstance->IsHooked()) {
-			gameHooked = false;
-		}
-		else {
-			markerLeft = true;
-		}
-	}
-	if (!blinkMarker && markerLeft) {
-		markerLeft = false;
-		cheatInstance->RemoveBlinkMarker();
-	}
-
-	static bool noBlinkCooldown = false;
-	ImGui::Checkbox("No Blink Cooldown", &noBlinkCooldown);
-	if (gameHooked && noBlinkCooldown && !cheatInstance->NoBlinkCooldown() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	static bool blinkHeightIncrease = false;
-	ImGui::Checkbox("Increase Blink Height", &blinkHeightIncrease);
-	if (gameHooked && blinkHeightIncrease && !cheatInstance->SetBlinkHeight(1000.0) && !cheatInstance->IsHooked())
-		gameHooked = false;
-	if (gameHooked && !blinkHeightIncrease)
-		cheatInstance->SetBlinkHeight(500.0);
-
-	static bool infTimeBend = false;
-	ImGui::Checkbox("Infinite Bend Time", &infTimeBend);
-	if (gameHooked && infTimeBend && !cheatInstance->InfiniteBendTime() && !cheatInstance->IsHooked())
-		gameHooked = false;
-	if (gameHooked && !infTimeBend)
-		cheatInstance->InfiniteBendTimeOff();
-
-	static bool infPossession = false;
-	ImGui::Checkbox("Infinite Possession", &infPossession);
-	if (gameHooked && infPossession && !cheatInstance->InfinitePossession() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	
-
-	// predefining button lists to simplify creation of buttons
-	const char* buttonIds[] = { "-5", "-1", "+1", "+5" };
-	const int buttonVals[] = { -5, -1, +1, +5 };
-
-	// Resources GUI section
-	ImGui::SeparatorText("Resources");
-	const char* elixirs[] = { "Health Elixir", "Mana Elixir" };
-	for (int i = 0; i < 2; i++) {
-		ImGui::Text(elixirs[i]);
-		for (int j = 0; j < 4; j++) {
+	if (otherBool[showBinds]) {
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
+		ImGui::Begin("Binds Window", &exit, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
+		static bool bindingPage = false;
+		static int type = NULL;
+		for (int i = 0; i < optionsSize; i++) {
+			ImGui::Text(showKeyBinds[options[i]]);
 			ImGui::SameLine();
-			if (ImGui::Button(buttonIds[j]) && gameHooked) {
-				cheatInstance->IncreaseElixir(i, buttonVals[j]);
+			if (ImGui::Button("Bind")) {
+				bindingPage = true;
+				type = i;
 			}
-			ImGui::PushID(buttonIds[j]);
+			ImGui::PushID("Bind");
+			ImGui::SameLine();
+			if (ImGui::Button("Unbind")) {
+				keyBinds[options[i]] = '\0';
+				showKeyBinds[options[i]] = (char*)"Not Bound";
+			}
+			ImGui::PushID("Unbind");
+			ImGui::SameLine();
+			ImGui::Text(": ");
+			ImGui::SameLine();
+			ImGui::Text(options[i]);
+			
 		}
-	}
+		if (bindingPage) {
+			ImGui::SetNextWindowPos({ 0, 0 });
+			ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
+			ImGui::Begin("Awaiting Keyboard Input", &exit, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
+			ImGui::Text("Awaiting Keyboard Input");
+			if (ImGui::Button("Cancel")) {
+				bindingPage = false;
+				type = NULL;
+			}
+			for (int j = 512; j <= 616; j++) {
+				if (ImGui::IsKeyPressed(imGuiIntToKey[j])) {
+					showKeyBinds[options[type]] = (char *) ImGui::GetKeyName(imGuiIntToKey[j]);
+					keyBinds[options[type]] = imGuiToVK.at(imGuiIntToKey[j]);
+					bindingPage = false;
+					type = NULL;
+				}
+			}
+			ImGui::End();
+		}
+		if (ImGui::Button("Close")) {
+			otherBool[showBinds] = false;
+			otherBool[lastState] = true;
+		}
+		ImGui::End();
+	} else {
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
+		ImGui::Begin("Dishonored Cheat", &exit, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 
-	ImGui::Text("Gold / Runes / Rewires");
-	for (int j = 0; j < 4; j++) {
-		ImGui::SameLine();
-		if (ImGui::Button(buttonIds[j]) && gameHooked) {
-			cheatInstance->IncreaseResourceCount(buttonVals[j]);
+		// This makes sure the pointers are up-to date
+		if (otherBool[gameHooked])
+			cheatInstance->SyncPointers();
+
+		//	Hook button
+		if (ImGui::Button("Hook Game")) {
+			cheatInstance = new DishonoredCheat();
+			if (cheatInstance->IsHooked())
+				otherBool[gameHooked] = true;
+			else
+				otherBool[gameHooked] = false;
 		}
-		ImGui::PushID(buttonIds[j]);
-	}
-	/*
-	const char* resources[] = { "Gold", "Runes", "Rewires" };
-	for (int i = 0; i < 3; i++) {
-		ImGui::Text(resources[i]);
+		ImGui::SameLine();
+		if (otherBool[gameHooked])
+			ImGui::TextColored(ImVec4(0, 185, 0, 100), successHook);
+		else
+			ImGui::TextColored(ImVec4(185, 0, 0, 100), failureHook);
+
+		if (ImGui::Button("Bind Buttons")) {
+			otherBool[showBinds] = true;
+			otherBool[lastState] = true;
+		}
+
+		// This displays memory slots for the client, player, inventory
+		if (cheatInstance) {
+			ImGui::Text("Client: %x", cheatInstance->getClientAddress());
+			ImGui::Text("Player: %x", cheatInstance->getPlayerAddress());
+			ImGui::Text("Abilities: %x", cheatInstance->getAbilitiesAddress());
+			ImGui::Text("Inventory: %x", cheatInstance->getInventoryAddress());
+			ImGui::Text("Assets: %x", cheatInstance->getAssets());
+		}
+
+		// Players GUI section
+		ImGui::SeparatorText("Player");
+		if (cheatInstance) {
+			ImGui::Text("Current Coords");
+			ImGui::Text("X: %f", cheatInstance->GetX());
+			ImGui::Text("Y: %f", cheatInstance->GetY());
+			ImGui::Text("Z: %f", cheatInstance->GetZ());
+		}
+
+		// teleportation
+		ImGui::Text("Teleport to Coords");
+		ImGui::InputText("X Coord", posXInput, IM_ARRAYSIZE(posXInput));
+		ImGui::InputText("Y Coord", posYInput, IM_ARRAYSIZE(posYInput));
+		ImGui::InputText("Z Coord", posZInput, IM_ARRAYSIZE(posZInput));
+		if (posXInput[0] == '~')
+			posX = cheatInstance->GetX();
+		else
+			posX = atof(posXInput);
+		if (posYInput[0] == '~')
+			posY = cheatInstance->GetY();
+		else
+			posY = atof(posYInput);
+		if (posZInput[0] == '~')
+			posZ = cheatInstance->GetZ();
+		else
+			posZ = atof(posZInput);
+
+		if (ImGui::Button("Teleport") && otherBool[gameHooked]) {
+			if (!cheatInstance->TeleportToCoords(posX, posY, posZ) && !cheatInstance->IsHooked()) {
+				otherBool[gameHooked] = false;
+			}
+		}
+		
+		// Checkmark look for all checkmarks
+		for (int i = 0; i < optionsSize; i++) {
+			if (i == 0)
+				ImGui::SeparatorText("Player");
+			if (i == infDarkVision)
+				ImGui::SeparatorText("Abilities");
+			if (i == infClip)
+				ImGui::SeparatorText("Ammo");
+			ImGui::Checkbox(options[i], &optionsBool[i]);
+			if (optionsBool[i] && otherBool[gameHooked])
+				cheatInstance->ActivateCheat(i);
+			if (i == invis || i == infHealth || i == blinkMarker || i == infClip)
+				if (!optionsBool[i] && otherBool[gameHooked])
+					cheatInstance->RepairCheat(i);
+		}
+		// Ammo GUI section
+		for (int i = 0; i < 7; i++) {
+			ImGui::Text(equipment[i]);
+			for (int j = 0; j < 4; j++) {
+				ImGui::SameLine();
+				if (ImGui::Button(buttonIds[j]) && otherBool[gameHooked]) {
+					cheatInstance->IncreaseAmmoCount(i, buttonVals[j]);
+				}
+				ImGui::PushID(buttonIds[j]);
+			}
+		}
+
+		// Resources GUI section
+		ImGui::SeparatorText("Resources");
+		for (int i = 0; i < 2; i++) {
+			ImGui::Text(elixirs[i]);
+			for (int j = 0; j < 4; j++) {
+				ImGui::SameLine();
+				if (ImGui::Button(buttonIds[j]) && otherBool[gameHooked]) {
+					cheatInstance->IncreaseElixir(i, buttonVals[j]);
+				}
+				ImGui::PushID(buttonIds[j]);
+			}
+		}
+
+		ImGui::Text("Gold / Runes / Rewires");
 		for (int j = 0; j < 4; j++) {
 			ImGui::SameLine();
-			if (ImGui::Button(buttonIds[j]) && gameHooked) {
+			if (ImGui::Button(buttonIds[j]) && otherBool[gameHooked]) {
 				cheatInstance->IncreaseResourceCount(buttonVals[j]);
 			}
 			ImGui::PushID(buttonIds[j]);
 		}
-	}
-	*/
 
-	// Ammo GUI section
-	ImGui::SeparatorText("Ammo");
-	static bool infClip = false;
-	static bool clipOpBroken = false;
-	ImGui::Checkbox("Infinite Clip", &infClip);
-	if (gameHooked && infClip)
-		if (!cheatInstance->UnlimitedClip() && !cheatInstance->IsHooked()) {
-			gameHooked = false;
-		} else {
-			clipOpBroken = true;
-		}
-	if (gameHooked && !infClip && clipOpBroken)
-		cheatInstance->RestoreClipOp();
+		otherBool[lastState] = false;
 
-	static bool infiniteAmmo = false;
-	ImGui::Checkbox("Unlimited Ammo", &infiniteAmmo);
-	if (gameHooked && infiniteAmmo && !cheatInstance->UnlimitedAmmo() && !cheatInstance->IsHooked())
-		gameHooked = false;
-
-	const char* equipment[] = { "Bullets", "Explosive Bullets", "Crossbow Bolts", "CrossBow Sleep Darts", 
-								"Crossbow Incendiary Bolts", "Spring Razors", "Grenades", "Sticky Grenades"};
-	for (int i = 0; i < 7; i++) {
-		ImGui::Text(equipment[i]);
-		for (int j = 0; j < 4; j++) {
-			ImGui::SameLine();
-			if (ImGui::Button(buttonIds[j]) && gameHooked) {
-				cheatInstance->IncreaseAmmoCount(i, buttonVals[j]);
+		for (int i = 0; i < optionsSize; i++)
+			if (GetAsyncKeyState(keyBinds[options[i]])) {
+				otherBool[lastState] = true;
+				break;
 			}
-			ImGui::PushID(buttonIds[j]);
-		}
+
+		ImGui::End();
 	}
-	ImGui::End();
 }

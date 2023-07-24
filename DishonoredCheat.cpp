@@ -11,6 +11,10 @@ namespace offsets {
 	constexpr::std::ptrdiff_t resources = 0x000000C8;
 	constexpr::std::ptrdiff_t abilities = 0x00000AA8;
 	constexpr::std::ptrdiff_t assets = 0x00F5A564;
+	constexpr::std::ptrdiff_t stats = 0xB70;
+
+	constexpr::std::ptrdiff_t invisibleOp = 0x00703C04;
+	constexpr::std::ptrdiff_t inaudibleOp = 0x00700CF8;
 
 	constexpr::std::ptrdiff_t resources_size = 0x000000CC;
 	constexpr::std::ptrdiff_t resources_first = 0x00000004;
@@ -18,7 +22,16 @@ namespace offsets {
 
 	//ability offsets
 	constexpr::std::ptrdiff_t darkVisionInfo = 0x00000AB0;
+	constexpr::std::ptrdiff_t darkVisionLevel = 0x00000088;
 	constexpr::std::ptrdiff_t darkVisionDuration = 0x00000094;
+	constexpr::std::ptrdiff_t blinkInfo = 0x00000AA8;
+	constexpr::std::ptrdiff_t blinkLevel = 0x00000088;
+	constexpr::std::ptrdiff_t possessionInfo = 0x00000AAC;
+	constexpr::std::ptrdiff_t possessionDuration = 0x00000094;
+	constexpr::std::ptrdiff_t possessionLevel = 0x00000088;
+	constexpr::std::ptrdiff_t devouringSwarmInfo = 0x00000AB4;
+	constexpr::std::ptrdiff_t devouringSwarmLevel = 0x00000088;
+	constexpr::std::ptrdiff_t timeBendLevel = -0x00000028;
 	constexpr::std::ptrdiff_t blinkDistOp = 0x007F5E1F;
 	constexpr::std::ptrdiff_t blinkDistOpX = 0x007F5E29;
 	constexpr::std::ptrdiff_t blinkDistOpY = 0x007F5E44;
@@ -29,8 +42,6 @@ namespace offsets {
 	constexpr::std::ptrdiff_t blinkHeightDistBasePointer = 0x00000128;
 	constexpr::std::ptrdiff_t blinkHeightDist = 0x00000008;
 	constexpr::std::ptrdiff_t blinkCooldown = 0x00000138;
-	constexpr::std::ptrdiff_t possessionInfo = 0x00000AAC;
-	constexpr::std::ptrdiff_t possessionDuration = 0x00000094;
 
 	//player offsets
 	constexpr::std::ptrdiff_t X = 0x000000C4;
@@ -61,6 +72,7 @@ namespace offsets {
 	//assets offsets
 	constexpr::std::ptrdiff_t timers = 0x8C;
 	constexpr::std::ptrdiff_t bendTimer = 0x18C;
+
 }
 
 DishonoredCheat::DishonoredCheat() : gameMemory(Memory{ "Dishonored.exe" }) {
@@ -75,6 +87,8 @@ DishonoredCheat::DishonoredCheat() : gameMemory(Memory{ "Dishonored.exe" }) {
 	this->blinkMarkerLeft = false;
 	this->blinkDistOpBroken = false;
 	this->bendTimerExtended = false;
+	this->invisibleOpBroken = false;
+	this->inaudibleOpBroken = false;
 }
 
 DishonoredCheat::~DishonoredCheat() {
@@ -98,6 +112,7 @@ int DishonoredCheat::RehookGame() {
 	this->abilities = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::abilities);
 	this->inventory = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::inventory);
 	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
+	this->assets = gameMemory.Read<std::uintptr_t>(this->client + offsets::assets);
 	return 1;
 }
 
@@ -112,6 +127,7 @@ int DishonoredCheat::UpdatePointers() {
 	this->abilities = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::abilities);
 	this->inventory = this->gameMemory.Read<std::uintptr_t>(this->player + offsets::inventory);
 	this->ammo = gameMemory.Read<std::uintptr_t>(this->inventory + offsets::ammo);
+	this->assets = gameMemory.Read<std::uintptr_t>(this->client + offsets::assets);
 	if (this->player == 0)
 		return 0;
 	return 1;
@@ -174,6 +190,44 @@ void DishonoredCheat::RestoreBlinkDistOp() {
 	this->blinkDistOpBroken = false;
 }
 
+void DishonoredCheat::BreakInvisibleOp() {
+	if (invisibleOpBroken)
+		return;
+	for (int i = 0; i < 10; i++) {
+		if (!prevInvisibleOp[i])
+			prevInvisibleOp[i] = this->gameMemory.Read<BYTE>(client + offsets::invisibleOp + (0x00000001 * i));
+
+		this->gameMemory.Write<BYTE>(client + offsets::invisibleOp + (0x00000001 * i), 144);
+	}
+	this->invisibleOpBroken = true;
+}
+
+void DishonoredCheat::RestoreInvisibleOp() {
+	for (int i = 0; i < 10; i++) {
+		this->gameMemory.Write<BYTE>(client + offsets::invisibleOp + (0x00000001 * i), this->prevInvisibleOp[i]);
+	}
+	this->invisibleOpBroken = false;
+}
+
+void DishonoredCheat::BreakInaudibleOp() {
+	if (inaudibleOpBroken)
+		return;
+	for (int i = 0; i < 4; i++) {
+		if (!prevInaudibleOp[i])
+			prevInaudibleOp[i] = this->gameMemory.Read<BYTE>(client + offsets::inaudibleOp + (0x00000001 * i));
+
+		this->gameMemory.Write<BYTE>(client + offsets::inaudibleOp + (0x00000001 * i), 144);
+	}
+	this->inaudibleOpBroken = true;
+}
+
+void DishonoredCheat::RestoreInaudibleOp() {
+	for (int i = 0; i < 4; i++) {
+		this->gameMemory.Write<BYTE>(client + offsets::inaudibleOp + (0x00000001 * i), this->prevInaudibleOp[i]);
+	}
+	this->inaudibleOpBroken = false;
+}
+
 float DishonoredCheat::GetX() {
 	return gameMemory.Read<float>(this->player + offsets::X);
 }
@@ -190,15 +244,6 @@ int DishonoredCheat::TeleportToCoords(float x, float y, float z) {
 	gameMemory.Write<float>(this->player + offsets::X, x);
 	gameMemory.Write<float>(this->player + offsets::Y, y);
 	gameMemory.Write<float>(this->player + offsets::Z, z);
-	return 1;
-}
-
-int DishonoredCheat::GetFov() {
-	return 1;//gameMemory.Read<float>(client + offsets::fov);
-}
-
-int DishonoredCheat::SetFov(float fovCount) {
-	//gameMemory.Write<float>(client + offsets::fov, (float)fovCount);
 	return 1;
 }
 
@@ -385,4 +430,85 @@ uintptr_t DishonoredCheat::getAbilitiesAddress() {
 
 uintptr_t DishonoredCheat::getAssets() {
 	return this->assets;
+}
+
+void DishonoredCheat::ActivateCheat(int type){
+	enum {
+		invis, infHealth, infMana, infOxy, infHealthElixir, infManaElixir, infDarkVision, blinkMarker, 
+		noBlinkCooldown, blinkHeightIncrease, infTimeBend, infPossession, infClip, infAmmo
+	};
+
+	switch (type) {
+		case invis:
+			this->BreakInvisibleOp();
+			this->BreakInaudibleOp();
+			break;
+		case infHealth:
+			this->InfiniteHealth();
+			break;
+		case infMana:
+			this->InfiniteMana();
+			break;
+		case infOxy:
+			this->InfiniteOxygen();
+			break;
+		case infHealthElixir:
+			this->UnlimitedHealthElixir();
+			break;
+		case infManaElixir:
+			this->UnlimitedManaElixir();
+			break;
+		case infDarkVision:
+			this->InfiniteDarkVision();
+			break;
+		case blinkMarker:
+			this->LeaveBlinkMarker();
+			break;
+		case noBlinkCooldown:
+			this->NoBlinkCooldown();
+			break;
+		case blinkHeightIncrease:
+			this->SetBlinkHeight(1000);
+			break;
+		case infTimeBend:
+			this->InfiniteBendTime();
+			break;
+		case infPossession:
+			this->InfinitePossession();
+			break;
+		case infClip:
+			this->UnlimitedClip();
+			break;
+		case infAmmo:
+			this->UnlimitedAmmo();
+			break;
+
+	}
+}
+
+void DishonoredCheat::RepairCheat(int type) {
+	enum {
+		invis, infHealth, infMana, infOxy, infHealthElixir, infManaElixir, infDarkVision, blinkMarker,
+		noBlinkCooldown, blinkHeightIncrease, infTimeBend, infPossession, infClip, infAmmo
+	};
+	switch (type) {
+		case invis:
+			if (invisibleOpBroken) {
+				RestoreInvisibleOp();
+				RestoreInaudibleOp();
+			}
+			break;
+		case infHealth:
+			if (maxHealthOpBroken)
+				RestoreMaxHealthOp();
+			break;
+		case blinkMarker:
+			if (blinkDistOpBroken)
+				RestoreBlinkDistOp();
+			break;
+		case infClip:
+			if (clipOpBroken)
+				RestoreClipOp();
+			break;
+	}
 }

@@ -10,7 +10,9 @@ class DishonoredCheat {
 	uintptr_t inventory;
 	uintptr_t ammo;
 	uintptr_t assets;
+	bool invisibleOpBroken;
 	bool maxHealthOpBroken;
+	bool inaudibleOpBroken;
 	bool clipOpBroken;
 	int prevMaxHealthOp[6];
 	int prevHealthOp[6];
@@ -24,6 +26,8 @@ class DishonoredCheat {
 	int prevBlinkDistOpY[3];
 	int prevBlinkDistOpZ[3];
 	bool bendTimerExtended;
+	int prevInvisibleOp[10];
+	int prevInaudibleOp[4];
 
 	public:
 		DishonoredCheat();
@@ -40,8 +44,6 @@ class DishonoredCheat {
 		float GetY();
 		float GetZ();
 		int TeleportToCoords(float x, float y, float z);
-		int GetFov();
-		int SetFov(float fovCount);
 		int InfiniteMana();
 		int InfiniteOxygen();
 		int UnlimitedHealthElixir();
@@ -54,6 +56,10 @@ class DishonoredCheat {
 		int SetBlinkDist(float x, float y, float z);
 		void BreakBlinkDistOp();
 		void RestoreBlinkDistOp();
+		void BreakInvisibleOp();
+		void RestoreInvisibleOp();
+		void BreakInaudibleOp();
+		void RestoreInaudibleOp();
 		int LeaveBlinkMarker();
 		int RemoveBlinkMarker();
 		int NoBlinkCooldown();
@@ -70,4 +76,6 @@ class DishonoredCheat {
 		uintptr_t getInventoryAddress();
 		uintptr_t getAbilitiesAddress();
 		uintptr_t getAssets();
+		void ActivateCheat(int type);
+		void RepairCheat(int type);
 };
